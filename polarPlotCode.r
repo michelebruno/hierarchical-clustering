@@ -1,6 +1,21 @@
 stars <- read.csv("./database_NorthernEmisphere.csv")
 library(plotly)
 
+
+distanceDataset <- stars[c("ra","dec","mag")]
+
+distanceDataset <- na.omit(distanceDataset)
+
+distanze <- dist(distanceDataset)
+
+fit <- hclust(distanze, method = "single")
+
+plot(fit)
+
+groups <- cutree(fit, h=2) # cut tree into 5 clusters
+# draw dendrogram with red borders around the 5 clusters
+rect.hclust(fit, h=2, border="red")
+
 fig <- plot_ly(
     type = 'scatterpolar',
     mode = 'markers',
