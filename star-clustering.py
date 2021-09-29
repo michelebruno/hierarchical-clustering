@@ -6,8 +6,9 @@ from sklearn.cluster import AgglomerativeClustering
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import kaleido
 
-pd.options.plotting.backend = "plotly"
+# pd.options.plotting.backend = "plotly"
 
 df = pd.read_csv(r'database_NorthernEmisphere.csv', low_memory=False, usecols=["ra", "dec"])
 
@@ -34,10 +35,13 @@ fig.update_layout(polar=dict(
     # angularaxis=dict(showticklabels=False, ticks='')
 ))
 
-fig.show();
+# fig.show()
 
 if not os.path.exists("images"):
     os.mkdir("images")
+
+fig.write_image("images/fig1.svg",  engine="kaleido")
+
 #
 # data = df.values
 #
