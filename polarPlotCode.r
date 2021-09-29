@@ -8,6 +8,7 @@ fig <- plot_ly(
 
 fig <- fig %>%
     add_trace(
+        name = c <- (stars$proper),
         r = c <- (stars$dec),
         theta = c <- ((stars$ra/24)*360),
         marker = list(
