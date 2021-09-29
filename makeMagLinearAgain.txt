@@ -1,0 +1,3 @@
+x_opacity = 10 ^ ( 0.4 * (referenceValue - x_mag) );
+
+reference value should equal 0, other values can be used to make more or less stars visible
