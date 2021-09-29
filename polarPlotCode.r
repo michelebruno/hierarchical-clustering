@@ -1,23 +1,19 @@
-stars <- read.csv("./hygdata_v3_CLEAN_1K_v1.csv")
+stars <- read.csv("./database_NorthernEmisphere.csv")
 library(plotly)
 
 fig <- plot_ly(
     type = 'scatterpolar',
-
     mode = 'markers',
-    
 )
+
 fig <- fig %>%
     add_trace(
-        r = c <- (stars$dist),
-        theta = c <- (stars$deg),
+        r = c <- (stars$dec),
+        theta = c <- ((stars$ra/24)*360),
         marker = list(
             color = '#FFF',
-            size = 4,
-            opacity = c <- (stars$opacity^2),
-            line = list(
-                width = 0
-            )
+            size = 2,
+            opacity = 1
         ),
         showlegend = F
     ) 
@@ -34,12 +30,14 @@ fig <- layout(
     polar = list(
         bgcolor = "rgb(0, 0, 0)",
         angularaxis = list(
+            range = c(0, 24),
             tickwidth = 1,
             linewidth = 1,
             opacity = 0.1,
             layer = 'below traces'
         ),
         radialaxis = list(
+            range = c(90, 0),
             side = 'counterclockwise',
             showline = F,
             linewidth = 1,
