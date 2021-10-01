@@ -48,14 +48,13 @@ df = df[df["dec"] > 0]
 unnamed = df[pd.isnull(df['proper'])]
 unnamed = unnamed[unnamed["mag"] < 7]
 
-# df = df[~pd.isnull(df['proper'])]
+df = df[~pd.isnull(df['proper'])]
 # df["proper"].fillna('no name')
-df = df[df["mag"] < 3.5]
+# df = df[df["mag"] < 6]
+
 print(df.shape)
 
-unnamed_to_append = unnamed[unnamed["mag"] < 3]
-
-print(unnamed_to_append.shape)
+df = pd.concat([df, unnamed[unnamed["mag"] < 3.5]])
 
 print(df.shape)
 
@@ -66,7 +65,8 @@ dn = sch.dendrogram(distance_matrix)
 figure.show()
 
 ac = AgglomerativeClustering(
-    n_clusters=30,
+    n_clusters= 30,
+    # distance_threshold= 12,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
     linkage='single'
 )
@@ -93,20 +93,34 @@ for label in range(grouped_indexes.ngroups):
 
     filtered = df.iloc[indexes]
 
-    filtered["mag"].apply(lambda x: float(x))
+    # filtered["mag"].apply(lambda x: float(x))
 
     # print(filtered["mag"])
 
+    normalized = pd.DataFrame()
+
+    for item in filtered.iterrows():
+        if item["mag"] < 3:
+            item["size"] = 4
+            item["opacity"] = 1
+        else:
+            item["size"] = 2
+            item["opacity"] = .5
+            break
+
+        normalized.append(item)
+
     fig.add_trace(go.Scatterpolar(
-        r=filtered['dec'],
-        theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
+        r=normalized['dec'],
+        theta=[datum['ra'] * 360 / 24 for index, datum in normalized.iterrows()],
         mode='markers+lines',
-        text=filtered["id"],
+        text=normalized["id"],
         marker=dict(
             # color=colors[label],
             # symbol="square",
+            opacity=normalized["opacity"],
             # size=5 - np.log(4 - filtered["mag"]),
-            size = 5
+            size = normalized["size"]
         )
     ))
 
