@@ -4,26 +4,51 @@ import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as sch
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
+from sklearn.metrics import pairwise_distances
+
 
 # pd.options.plotting.backend = "plotly"
 
-df = pd.read_csv(r'database_NorthernEmisphere.csv', low_memory=False)
+# calculates the distance on a sphere, ra and dec must be in degrees
+def sphere_distance(p1, p2):
+    ra1 = p1[0] * 360 / 24
+    dec1 = p1[1]
+    ra2 = p2[0] * 360 / 24
+    dec2 = p2[1]
 
-# Selected columns
-df_sl = df.iloc[:, 7:9]
-# Inizializza la figura
-fig = go.Figure()
+    distance = np.cos(90 - dec1) * np.cos(90 - dec2) + np.sin(90 - dec1) * np.sin(90 - dec2) * np.cos(ra1 - ra2)
+
+    distance = np.degrees(np.arccos(distance))
+    if distance < 0:
+        print("Negative distance")
+
+    return distance
+
+
+df = pd.read_csv(r'database_root.csv', low_memory=False)
+
+print(df.shape)
+df = df[df["mag"] < 3.5]
+df = df[df["dec"] > 0]
+# df["proper"].fillna('no name')
+print(df.shape)
+
+distance_matrix = sch.linkage(df.loc[:, ["ra", "dec"]], 'single', sphere_distance)
+figure = plt.figure(figsize=(25, 10))
+dn = sch.dendrogram(distance_matrix)
+figure.show()
 
 ac = AgglomerativeClustering(
-    n_clusters=12
+    n_clusters=24,
+    affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
+    linkage='single'
 )
 
-ac.fit(df_sl.values)
+ac.fit(df.loc[:, ["ra", "dec"]])
 
 # Associa a ciascun index dei dati, il cluster di appartenenza
-clustered_data = pd.DataFrame([df_sl.index, ac.labels_]).T
+clustered_data = pd.DataFrame([df.index, ac.labels_]).T
 
 # fig.add_trace(go.Scatterpolar(
 #     r=df['dec'],
@@ -40,10 +65,13 @@ clustered_data = pd.DataFrame([df_sl.index, ac.labels_]).T
 colors = [
     "red",
     "green",
-
+    "yellow"
 ]
 
 grouped_indexes = clustered_data.groupby(1)
+
+# Inizializza la figura
+fig = go.Figure()
 
 for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
@@ -54,10 +82,10 @@ for label in range(grouped_indexes.ngroups):
     fig.add_trace(go.Scatterpolar(
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
-        mode='markers',
-        name='Figure 8',
+        mode='lines',
+        text=filtered["proper"],
         marker=dict(
-            color=np.random.choice(range(256), 3),
+            # color=colors[label],
             # symbol="square",
             size=3
         )
