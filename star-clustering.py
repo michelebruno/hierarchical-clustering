@@ -45,33 +45,26 @@ df = df[~pd.isnull(df['proper'])]
 # df["proper"].fillna('no name')
 print(df.shape)
 
+# df.merge(unnamed[unnamed["mag"]])
+
 distance_matrix = sch.linkage(df.loc[:, ["ra", "dec"]], 'single', sphere_distance)
 figure = plt.figure(figsize=(25, 10))
 dn = sch.dendrogram(distance_matrix)
+
+
 figure.show()
 
 ac = AgglomerativeClustering(
-    n_clusters=24,
+    n_clusters = 20,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
     linkage='single'
 )
 
+# TODO Differenza tra fit e fit_predict?
 ac.fit(df.loc[:, ["ra", "dec"]])
 
 # Associa a ciascun index dei dati, il cluster di appartenenza
 clustered_data = pd.DataFrame([df.index, ac.labels_]).T
-
-# fig.add_trace(go.Scatterpolar(
-#     r=df['dec'],
-#     theta=[datum['ra'] * 360 / 24 for index, datum in df.iterrows()],
-#     mode='markers',
-#     name='Figure 8',
-#     marker=dict(
-#         color="red",
-#         # symbol="square",
-#         size=8
-#     )
-# ))
 
 colors = [
     "red",
@@ -84,28 +77,17 @@ grouped_indexes = clustered_data.groupby(1)
 # Inizializza la figura
 fig = go.Figure()
 
-# fig.add_trace(go.Scatterpolar(
-#     r=unnamed['dec'],
-#     theta=[datum['ra'] * 360 / 24 for index, datum in unnamed.iterrows()],
-#     mode='markers',
-#     text=unnamed["proper"],
-#     marker=dict(
-#         # color=colors[label],
-#         # symbol="square",
-#         size=3, opacity=.5,
-#     )
-# ))
+
 
 for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
 
     filtered = df.iloc[indexes]
 
-    # print(filtered['dec'])
     fig.add_trace(go.Scatterpolar(
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
-        mode='markers',
+        mode='markers+lines',
         text=filtered["proper"],
         marker=dict(
             # color=colors[label],
@@ -113,9 +95,6 @@ for label in range(grouped_indexes.ngroups):
             size=5
         )
     ))
-
-#
-
 
 fig.update_layout(polar=dict(
     radialaxis=dict(range=[90, 0]),
@@ -129,12 +108,3 @@ if not os.path.exists("images"):
 
 fig.write_image("images/fig1.svg", engine="kaleido")
 
-#
-# data = df.values
-#
-# plt.figure(figsize=(10, 7))
-# plt.title("Customer Dendrograms")
-#
-# dend = sch.dendrogram(sch.linkage(data, method='single'))
-#
-# plt.show()
