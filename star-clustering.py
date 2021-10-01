@@ -41,7 +41,7 @@ df = pd.read_csv(r'database_root.csv', low_memory=False)
 
 # Milano è 45°28′01″N 9°11′24″E
 
-print(df.shape)
+# print(df.shape)
 
 df = df[df["dec"] > 0]
 
@@ -52,11 +52,11 @@ df = df[~pd.isnull(df['proper'])]
 # df["proper"].fillna('no name')
 # df = df[df["mag"] < 6]
 
-print(df.shape)
+# print(df.shape)
 
 df = pd.concat([df, unnamed[unnamed["mag"] < 3.5]])
 
-print(df.shape)
+# print(df.shape)
 
 distance_matrix = sch.linkage(df.loc[:, ["ra", "dec"]], 'single', sphere_distance)
 figure = plt.figure(figsize=(25, 10))
@@ -65,7 +65,7 @@ dn = sch.dendrogram(distance_matrix)
 figure.show()
 
 ac = AgglomerativeClustering(
-    n_clusters= 30,
+    n_clusters=30,
     # distance_threshold= 12,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
     linkage='single'
@@ -99,28 +99,29 @@ for label in range(grouped_indexes.ngroups):
 
     normalized = pd.DataFrame()
 
-    for item in filtered.iterrows():
+    for index, item in filtered.iterrows():
         if item["mag"] < 3:
-            item["size"] = 4
-            item["opacity"] = 1
+            print(item["mag"])
+            filtered.loc[:, (index, "size")] = 4,
+            filtered.loc[:, (index, "opacity")] = 1,
         else:
-            item["size"] = 2
-            item["opacity"] = .5
+            filtered.loc[:, (index, "size")] = 4,
+            filtered.loc[:, (index, "opacity")] = 1,
             break
-
-        normalized.append(item)
+        #normalized.add(item)
+    #print(normalized)
 
     fig.add_trace(go.Scatterpolar(
-        r=normalized['dec'],
-        theta=[datum['ra'] * 360 / 24 for index, datum in normalized.iterrows()],
+        r=filtered['dec'],
+        theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
         mode='markers+lines',
-        text=normalized["id"],
+        text=filtered["id"],
         marker=dict(
             # color=colors[label],
             # symbol="square",
-            opacity=normalized["opacity"],
+            opacity=filtered["opacity"],
             # size=5 - np.log(4 - filtered["mag"]),
-            size = normalized["size"]
+            size=filtered["size"]
         )
     ))
 
