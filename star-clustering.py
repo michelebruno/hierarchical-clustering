@@ -30,6 +30,13 @@ def sphere_distance(p1, p2):
     return distance
 
 
+def calc_dist_by_id(id1, id2):
+    point1 = df.loc[df['id'] == id1, ["ra", "dec"]].iloc[0]
+    point2 = df.loc[df['id'] == id2, ["ra", "dec"]].iloc[0]
+
+    print(sphere_distance(point1, point2))
+
+
 df = pd.read_csv(r'database_root.csv', low_memory=False)
 
 # Milano è 45°28′01″N 9°11′24″E
