@@ -16,7 +16,9 @@ df_sl = df.iloc[:, 7:9]
 # Inizializza la figura
 fig = go.Figure()
 
-ac = AgglomerativeClustering()
+ac = AgglomerativeClustering(
+    n_clusters=12
+)
 
 ac.fit(df_sl.values)
 
@@ -35,10 +37,15 @@ clustered_data = pd.DataFrame([df_sl.index, ac.labels_]).T
 #     )
 # ))
 
+colors = [
+    "red",
+    "green",
+
+]
 
 grouped_indexes = clustered_data.groupby(1)
 
-for label in range(grouped_indexes.ndim):
+for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
 
     filtered = df.iloc[indexes]
@@ -50,9 +57,9 @@ for label in range(grouped_indexes.ndim):
         mode='markers',
         name='Figure 8',
         marker=dict(
-            color="red" if label > 0 else 'blue',
+            color=np.random.choice(range(256), 3),
             # symbol="square",
-            size=8
+            size=3
         )
     ))
 
