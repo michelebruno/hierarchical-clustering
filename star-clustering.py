@@ -17,7 +17,8 @@ def sphere_distance(p1, p2):
     ra2 = p2[0] * 360 / 24
     dec2 = p2[1]
 
-    distance = np.cos(np.deg2rad(90 - dec1)) * np.cos(np.deg2rad(90 - dec2)) + np.sin(np.deg2rad(90 - dec1)) * np.sin(np.deg2rad(90 - dec2)) * np.cos(np.deg2rad(ra1 - ra2))
+    distance = np.cos(np.deg2rad(90 - dec1)) * np.cos(np.deg2rad(90 - dec2)) + np.sin(np.deg2rad(90 - dec1)) * np.sin(
+        np.deg2rad(90 - dec2)) * np.cos(np.deg2rad(ra1 - ra2))
 
     if distance > 1:
         distance = 1
@@ -40,22 +41,25 @@ df = df[df["dec"] > 0]
 unnamed = df[pd.isnull(df['proper'])]
 unnamed = unnamed[unnamed["mag"] < 7]
 
-# df = df[df["mag"] < 4.5]
-df = df[~pd.isnull(df['proper'])]
+# df = df[~pd.isnull(df['proper'])]
 # df["proper"].fillna('no name')
+df = df[df["mag"] < 3.5]
 print(df.shape)
 
-# df.merge(unnamed[unnamed["mag"]])
+unnamed_to_append = unnamed[unnamed["mag"] < 3]
+
+print(unnamed_to_append.shape)
+
+print(df.shape)
 
 distance_matrix = sch.linkage(df.loc[:, ["ra", "dec"]], 'single', sphere_distance)
 figure = plt.figure(figsize=(25, 10))
 dn = sch.dendrogram(distance_matrix)
 
-
 figure.show()
 
 ac = AgglomerativeClustering(
-    n_clusters = 20,
+    n_clusters=30,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
     linkage='single'
 )
@@ -77,26 +81,30 @@ grouped_indexes = clustered_data.groupby(1)
 # Inizializza la figura
 fig = go.Figure()
 
-
-
 for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
 
     filtered = df.iloc[indexes]
 
+    filtered["mag"].apply(lambda x: float(x))
+
+    # print(filtered["mag"])
+
     fig.add_trace(go.Scatterpolar(
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
         mode='markers+lines',
-        text=filtered["proper"],
+        text=filtered["id"],
         marker=dict(
             # color=colors[label],
             # symbol="square",
-            size=5
+            # size=5 - np.log(4 - filtered["mag"]),
+            size = 5
         )
     ))
 
 fig.update_layout(polar=dict(
+    # Inverte l'asse dec
     radialaxis=dict(range=[90, 0]),
     # angularaxis=dict(showticklabels=False, ticks='')
 ))
@@ -107,4 +115,3 @@ if not os.path.exists("images"):
     os.mkdir("images")
 
 fig.write_image("images/fig1.svg", engine="kaleido")
-
