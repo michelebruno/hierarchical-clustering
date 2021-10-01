@@ -17,7 +17,10 @@ def sphere_distance(p1, p2):
     ra2 = p2[0] * 360 / 24
     dec2 = p2[1]
 
-    distance = np.cos(90 - dec1) * np.cos(90 - dec2) + np.sin(90 - dec1) * np.sin(90 - dec2) * np.cos(ra1 - ra2)
+    distance = np.cos(np.deg2rad(90 - dec1)) * np.cos(np.deg2rad(90 - dec2)) + np.sin(np.deg2rad(90 - dec1)) * np.sin(np.deg2rad(90 - dec2)) * np.cos(np.deg2rad(ra1 - ra2))
+
+    if distance > 1:
+        distance = 1
 
     distance = np.degrees(np.arccos(distance))
     if distance < 0:
@@ -28,9 +31,17 @@ def sphere_distance(p1, p2):
 
 df = pd.read_csv(r'database_root.csv', low_memory=False)
 
+# Milano è 45°28′01″N 9°11′24″E
+
 print(df.shape)
-df = df[df["mag"] < 3.5]
+
 df = df[df["dec"] > 0]
+
+unnamed = df[pd.isnull(df['proper'])]
+unnamed = unnamed[unnamed["mag"] < 7]
+
+# df = df[df["mag"] < 4.5]
+df = df[~pd.isnull(df['proper'])]
 # df["proper"].fillna('no name')
 print(df.shape)
 
@@ -73,6 +84,18 @@ grouped_indexes = clustered_data.groupby(1)
 # Inizializza la figura
 fig = go.Figure()
 
+# fig.add_trace(go.Scatterpolar(
+#     r=unnamed['dec'],
+#     theta=[datum['ra'] * 360 / 24 for index, datum in unnamed.iterrows()],
+#     mode='markers',
+#     text=unnamed["proper"],
+#     marker=dict(
+#         # color=colors[label],
+#         # symbol="square",
+#         size=3, opacity=.5,
+#     )
+# ))
+
 for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
 
@@ -82,12 +105,12 @@ for label in range(grouped_indexes.ngroups):
     fig.add_trace(go.Scatterpolar(
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
-        mode='lines',
+        mode='markers',
         text=filtered["proper"],
         marker=dict(
             # color=colors[label],
             # symbol="square",
-            size=3
+            size=5
         )
     ))
 
@@ -104,7 +127,7 @@ fig.show()
 if not os.path.exists("images"):
     os.mkdir("images")
 
-# fig.write_image("images/fig1.svg", engine="kaleido")
+fig.write_image("images/fig1.svg", engine="kaleido")
 
 #
 # data = df.values
