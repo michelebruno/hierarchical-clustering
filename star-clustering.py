@@ -1,12 +1,13 @@
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as sch
 from scipy.cluster.hierarchy import dendrogram
+from scipy.spatial.distance import pdist
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
 import plotly.graph_objects as go
 from sklearn.metrics import pairwise_distances
+from plotly.figure_factory import create_dendrogram
 
 
 # pd.options.plotting.backend = "plotly"
@@ -36,6 +37,13 @@ def calc_dist_by_id(id1, id2):
     point2 = df.loc[df['id'] == id2, ["ra", "dec"]].iloc[0]
 
     print(sphere_distance(point1, point2))
+
+
+def scale(val, src, dst):
+    """
+    Scale the given value from the scale of src to the scale of dst.
+    """
+    return ((val - src[0]) / (src[1] - src[0])) * (dst[1] - dst[0]) + dst[0]
 
 
 def plot_dendrogram(model, **kwargs):
@@ -82,24 +90,24 @@ df = pd.concat([df, unnamed[unnamed["mag"] < 3.5]])
 
 print("Final shape: ", df.shape)
 
-# print(filtered["mag"])
 sizes = []
-opacities = []
 
 for index, item in df.iterrows():
-    if item["mag"] < 3:
-        sizes.append(10)
-        opacities.append(1)
-    else:
-        sizes.append(8)
-        opacities.append(.8)
+    size = scale(
+        item["mag"],
+        [max(df["mag"]), min(df["mag"])],
+        [.05, 4]
+    )
+    sizes.append(size)
 
-df.insert(0, "opacity", opacities)
+# df.insert(0, "opacity", opacities)
 df.insert(0, "size", sizes)
+
+distance_threshold = 12
 
 ac = AgglomerativeClustering(
     n_clusters=None,
-    distance_threshold=12,
+    distance_threshold=distance_threshold,
     compute_full_tree=True,
     compute_distances=True,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
@@ -110,11 +118,6 @@ ac = AgglomerativeClustering(
 ac.fit(df.loc[:, ["ra", "dec"]])
 
 print(max(ac.labels_ + 1), "costellazioni")
-
-figure = plt.figure(figsize=(80, 40))
-plot_dendrogram(ac, leaf_label_func= lambda x: df.iloc[x]["proper"] if df.iloc[x]["proper"] else df.iloc[x]["id"])
-# plt.savefig("images/dendrogram.svg")
-plt.show()
 
 # Associa a ciascun index dei dati, il cluster di appartenenza
 clustered_data = pd.DataFrame([df.index, ac.labels_]).T
@@ -129,7 +132,6 @@ grouped_indexes = clustered_data.groupby(1)
 
 # Inizializza la figura
 fig = go.Figure()
-
 for label in range(grouped_indexes.ngroups):
     indexes = grouped_indexes.groups[label]
 
@@ -142,18 +144,24 @@ for label in range(grouped_indexes.ngroups):
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
         mode='markers',
         text=filtered["id"],
+
         marker=dict(
             # color=colors[label],
             # symbol="square",
-            opacity=filtered["opacity"],
+            # opacity=filtered["opacity"],
             # size=5 - np.log(4 - filtered["mag"]),
-            size=filtered["size"]
+            opacity=1,
+            size=filtered["size"],
+            line=dict(
+                width=0
+            )
         )
     ))
 
 fig.update_layout(polar=dict(
     # Inverte l'asse dec
     radialaxis=dict(range=[90, 0]),
+    bgcolor='#384554',
     # angularaxis=dict(showticklabels=False, ticks='')
 ))
 
@@ -162,4 +170,17 @@ fig.show()
 if not os.path.exists("images"):
     os.mkdir("images")
 
-fig.write_image("images/fig1.svg")
+fig.write_image("images/scatterpolar.svg")
+
+# Dendrogram
+dendro = create_dendrogram(
+    df.loc[:, ["ra", "dec"]],
+    color_threshold=distance_threshold,
+    distfun=lambda x: pdist(x, metric=sphere_distance),
+    linkagefun=lambda x: sch.linkage(x, "single"),
+    labels=[item["proper"] if not pd.isnull(item["proper"]) else item["id"] for i, item in df.iterrows()]
+)
+
+dendro.update_layout({'width': 1400, 'height': 900})
+dendro.show()
+dendro.write_image("images/dendrogram.svg")
