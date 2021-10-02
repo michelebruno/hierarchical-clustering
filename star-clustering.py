@@ -97,39 +97,69 @@ for label in range(grouped_indexes.ngroups):
 
     # print(filtered["mag"])
 
-    normalized = pd.DataFrame()
+    # normalized = pd.DataFrame()
 
-    for index, item in filtered.iterrows():
-        if item["mag"] < 3:
-            print(item["mag"])
-            filtered.loc[:, (index, "size")] = 4,
-            filtered.loc[:, (index, "opacity")] = 1,
+    size = []
+    opacity = []
+    for value in filtered['mag']:
+        print(value)
+        if value < 4:
+            size.append(5 - np.log(4 - value))
+            opacity.append(1)
         else:
-            filtered.loc[:, (index, "size")] = 4,
-            filtered.loc[:, (index, "opacity")] = 1,
-            break
-        #normalized.add(item)
-    #print(normalized)
+            size.append(1)
+            opacity.append(0.5)
+    filtered['size'] = size
+    filtered['opacity'] = opacity
 
-    fig.add_trace(go.Scatterpolar(
-        r=filtered['dec'],
-        theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
-        mode='markers+lines',
-        text=filtered["id"],
-        marker=dict(
-            # color=colors[label],
-            # symbol="square",
-            opacity=filtered["opacity"],
-            # size=5 - np.log(4 - filtered["mag"]),
-            size=filtered["size"]
+    print(filtered)
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=filtered['dec'],
+            theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
+            mode='markers+lines',
+            text=filtered["id"],
+            marker=dict(
+                # color=colors[label],
+                line=dict(width=0),
+                opacity=filtered["opacity"],
+                # size=5 - np.log(4 - filtered["mag"]),
+                size=filtered["size"]
+            )
         )
-    ))
+    )
 
-fig.update_layout(polar=dict(
-    # Inverte l'asse dec
-    radialaxis=dict(range=[90, 0]),
-    # angularaxis=dict(showticklabels=False, ticks='')
-))
+    fig.update_layout(
+        polar=dict(
+
+            bgcolor="#003153",
+
+            radialaxis=dict(
+                range=[90, 0],
+                gridcolor="#3F6178",
+                gridwidth=0.1,
+                layer='below traces',
+                dtick=30,
+                showticklabels=False,
+                ticks=''
+            ),
+
+            angularaxis=dict(
+                gridcolor="#3F6178",
+                layer='below traces',
+                gridwidth=0.1,
+                dtick=360 / 24,
+                showticklabels=False,
+                ticks=''
+            ),
+
+        ),
+
+        paper_bgcolor="#FEFEE9",
+        showlegend=False,
+
+    )
 
 fig.show()
 
