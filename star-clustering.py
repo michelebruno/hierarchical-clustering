@@ -109,12 +109,12 @@ ac = AgglomerativeClustering(
 # TODO Differenza tra fit e fit_predict?
 ac.fit(df.loc[:, ["ra", "dec"]])
 
-print(max(ac.labels_ +1 ) ,"costellazioni")
+print(max(ac.labels_ + 1), "costellazioni")
 
 figure = plt.figure(figsize=(80, 40))
-plot_dendrogram(ac)
-plt.savefig("images/dendrogram.svg")
-
+plot_dendrogram(ac, leaf_label_func= lambda x: df.iloc[x]["proper"] if df.iloc[x]["proper"] else df.iloc[x]["id"])
+# plt.savefig("images/dendrogram.svg")
+plt.show()
 
 # Associa a ciascun index dei dati, il cluster di appartenenza
 clustered_data = pd.DataFrame([df.index, ac.labels_]).T
@@ -140,7 +140,7 @@ for label in range(grouped_indexes.ngroups):
     fig.add_trace(go.Scatterpolar(
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
-        mode='markers+lines',
+        mode='markers',
         text=filtered["id"],
         marker=dict(
             # color=colors[label],
@@ -162,4 +162,4 @@ fig.show()
 if not os.path.exists("images"):
     os.mkdir("images")
 
-fig.write_image("images/fig1.svg" )
+fig.write_image("images/fig1.svg")
