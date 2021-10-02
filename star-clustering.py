@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import scipy.cluster.hierarchy as sch
-from scipy.cluster.hierarchy import dendrogram
 from scipy.spatial.distance import pdist
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
@@ -45,29 +44,6 @@ def scale(val, src, dst):
     """
     return ((val - src[0]) / (src[1] - src[0])) * (dst[1] - dst[0]) + dst[0]
 
-
-def plot_dendrogram(model, **kwargs):
-    # Create linkage matrix and then plot the dendrogram
-
-    # create the counts of samples under each node
-    counts = np.zeros(model.children_.shape[0])
-    n_samples = len(model.labels_)
-    for i, merge in enumerate(model.children_):
-        current_count = 0
-        for child_idx in merge:
-            if child_idx < n_samples:
-                current_count += 1  # leaf node
-            else:
-                current_count += counts[child_idx - n_samples]
-        counts[i] = current_count
-
-    linkage_matrix = np.column_stack([model.children_, model.distances_,
-                                      counts]).astype(float)
-
-    # Plot the corresponding dendrogram
-    dendrogram(linkage_matrix, **kwargs)
-
-
 df = pd.read_csv(r'database_root.csv', low_memory=False)
 
 # Milano è 45°28′01″N 9°11′24″E
@@ -108,8 +84,6 @@ distance_threshold = 12
 ac = AgglomerativeClustering(
     n_clusters=None,
     distance_threshold=distance_threshold,
-    compute_full_tree=True,
-    compute_distances=True,
     affinity=lambda X: pairwise_distances(X, metric=sphere_distance),
     linkage='single'
 )
