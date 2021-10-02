@@ -143,7 +143,7 @@ for label in range(grouped_indexes.ngroups):
         r=filtered['dec'],
         theta=[datum['ra'] * 360 / 24 for index, datum in filtered.iterrows()],
         mode='markers',
-        text=filtered["id"],
+        text=[str(item["id"]) + " " + str(item["proper"]) for i, item in filtered.iterrows()],
 
         marker=dict(
             # color=colors[label],
