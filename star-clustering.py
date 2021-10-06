@@ -135,8 +135,10 @@ for label in range(grouped_indexes.ngroups):
         text=[str(item["id"]) + " " + str(item["proper"]) for i, item in filtered.iterrows()],
 
         marker=dict(
+            color = "white",
             opacity=1,
-            size=filtered["size"],
+            #size=filtered["size"],
+            size=2,
             line=dict(
                 width=0
             )
